@@ -19,12 +19,12 @@
 <body>
 <div class="card">
     <h2>ProMail Express</h2>
-    <input type="password" id="tk" placeholder="Colle ta clé hf_... (avec droits Inference)" onchange="localStorage.setItem('saved_tk', this.value)">
+    <input type="password" id="tk" placeholder="Colle ta clé hf_... (Inference Providers)" onchange="localStorage.setItem('saved_tk', this.value)">
     <textarea id="msg" rows="4" placeholder="Ton message à rendre plus pro..."></textarea>
     <button onclick="send()">TRANSFORMER</button>
     <div id="lod" class="status">⏳ L'IA prépare une version professionnelle...</div>
     <div id="res"></div>
-    <div class="note">Token doit avoir la permission "Make calls to Inference Providers" (crée un nouveau token fine-grained si besoin).</div>
+    <div class="note">Modèle actuel : Qwen2.5-7B-Instruct (excellent en FR). Change-le dans le code si tu veux tester SmolLM ou Llama-3.2.</div>
 </div>
 
 <script>
@@ -52,7 +52,7 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "mistralai/Mistral-7B-Instruct-v0.3",
+                    model: "Qwen/Qwen2.5-7B-Instruct",  // ← Change ici si tu veux : "HuggingFaceTB/SmolLM2-1.7B-Instruct" ou "meta-llama/Llama-3.2-3B-Instruct"
                     messages: [
                         {
                             role: "user",
@@ -60,24 +60,24 @@
                         }
                     ],
                     max_tokens: 350,
-                    temperature: 0.65
+                    temperature: 0.7
                 })
             });
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                throw new Error(`Erreur HTTP ${response.status} – ${err.error?.message || 'Détails dans la console'}`);
+                throw new Error(`Erreur HTTP ${response.status} – ${err.error?.message || 'Vérifie console'}`);
             }
 
             const data = await response.json();
-            const text = data.choices?.[0]?.message?.content?.trim() || "Réponse vide ou invalide...";
+            const text = data.choices?.[0]?.message?.content?.trim() || "Réponse vide...";
 
             output.innerText = text;
             output.style.display = "block";
 
         } catch (err) {
             console.error(err);
-            alert("Erreur : " + err.message + "\n\n→ Vérifie surtout les permissions de ton token !");
+            alert("Erreur : " + err.message + "\nVérifie ton token, le modèle, ou teste avec un autre comme SmolLM2.");
         } finally {
             loader.style.display = "none";
         }
