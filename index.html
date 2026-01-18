@@ -19,16 +19,15 @@
 <body>
 <div class="card">
     <h2>ProMail Express</h2>
-    <input type="password" id="tk" placeholder="Colle ta clé hf_..." onchange="localStorage.setItem('saved_tk', this.value)">
+    <input type="password" id="tk" placeholder="Colle ta clé hf_... (avec droits Inference)" onchange="localStorage.setItem('saved_tk', this.value)">
     <textarea id="msg" rows="4" placeholder="Ton message à rendre plus pro..."></textarea>
     <button onclick="send()">TRANSFORMER</button>
     <div id="lod" class="status">⏳ L'IA prépare une version professionnelle...</div>
     <div id="res"></div>
-    <div class="note">Utilise un modèle plus moderne (Mistral, Llama, etc.) car BlenderBot n'est plus disponible en inference gratuite.</div>
+    <div class="note">Token doit avoir la permission "Make calls to Inference Providers" (crée un nouveau token fine-grained si besoin).</div>
 </div>
 
 <script>
-    // Récupère la clé sauvegardée
     document.getElementById('tk').value = localStorage.getItem('saved_tk') || '';
 
     async function send() {
@@ -38,7 +37,7 @@
         const loader = document.getElementById('lod');
 
         if (!token || !message) {
-            alert("Veuillez remplir la clé API et le message !");
+            alert("Clé API + message obligatoires !");
             return;
         }
 
@@ -53,11 +52,7 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "mistralai/Mistral-7B-Instruct-v0.3", // ← très bon rapport qualité/vitesse
-                    // Autres bons choix possibles :
-                    // "meta-llama/Llama-3.2-3B-Instruct"
-                    // "Qwen/Qwen2.5-7B-Instruct"
-                    // "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+                    model: "mistralai/Mistral-7B-Instruct-v0.3",
                     messages: [
                         {
                             role: "user",
@@ -70,19 +65,19 @@
             });
 
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error?.message || "Erreur HTTP " + response.status);
+                const err = await response.json().catch(() => ({}));
+                throw new Error(`Erreur HTTP ${response.status} – ${err.error?.message || 'Détails dans la console'}`);
             }
 
             const data = await response.json();
-            const text = data.choices?.[0]?.message?.content?.trim() || "Pas de réponse valide...";
+            const text = data.choices?.[0]?.message?.content?.trim() || "Réponse vide ou invalide...";
 
             output.innerText = text;
             output.style.display = "block";
 
         } catch (err) {
-            alert("Erreur : " + err.message + "\n\nVérifie que ta clé a les droits Inference (serverless) et que le modèle existe.");
             console.error(err);
+            alert("Erreur : " + err.message + "\n\n→ Vérifie surtout les permissions de ton token !");
         } finally {
             loader.style.display = "none";
         }
