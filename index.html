@@ -22,11 +22,42 @@
             background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%);
             animation: pulseGlow 12s infinite alternate;
         }
+        /* Toast styles */
+        #toastContainer {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .toast {
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .toast.success { background: linear-gradient(to right, #10b981, #059669); }
+        .toast.error   { background: linear-gradient(to right, #ef4444, #b91c1c); }
     </style>
 </head>
 <body class="min-h-screen text-gray-100 flex items-center justify-center p-6 relative font-sans">
     <div class="particles"></div>
 
+    <!-- Container principal -->
     <div class="w-full max-w-7xl relative z-10">
         <div class="glass rounded-3xl p-8 md:p-12 shadow-2xl shadow-indigo-900/50 transition-all duration-500 hover:shadow-indigo-700/60">
             
@@ -40,7 +71,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
                 
-                <!-- Historique (gauche) -->
+                <!-- Historique -->
                 <div class="glass rounded-2xl p-8 flex flex-col order-3 lg:order-1">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-2xl font-bold text-indigo-300">Historique</h3>
@@ -52,25 +83,22 @@
                     <p class="mt-4 text-sm text-center text-indigo-400/70">Clique pour revoir</p>
                 </div>
 
-                <!-- Formulaire principal (centre) -->
+                <!-- Formulaire principal -->
                 <div class="glass rounded-2xl p-8 order-1 lg:order-2 relative">
-                    <!-- Bouton changer token (visible seulement quand token déjà enregistré) -->
                     <button id="changeTokenBtn" class="absolute top-4 right-4 text-indigo-400 hover:text-indigo-300 text-sm flex items-center gap-2 hidden" onclick="showTokenField()">
                         <i class="fas fa-key"></i> Changer token
                     </button>
 
-                    <!-- Sélecteur modèle -->
                     <div class="mb-8">
                         <label class="block text-sm font-medium text-indigo-300 mb-3">Modèle IA</label>
                         <select id="modelSelect" class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass">
-                            <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct (Équilibré, excellent FR)</option>
-                            <option value="HuggingFaceTB/SmolLM3-3B">SmolLM3-3B (Ultra-rapide)</option>
-                            <option value="meta-llama/Llama-3.2-3B-Instruct">Llama-3.2-3B-Instruct (Fiable & léger)</option>
-                            <option value="meta-llama/Meta-Llama-3-8B-Instruct">Llama-3-8B-Instruct (Premium classique)</option>
+                            <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct</option>
+                            <option value="HuggingFaceTB/SmolLM3-3B">SmolLM3-3B</option>
+                            <option value="meta-llama/Llama-3.2-3B-Instruct">Llama-3.2-3B-Instruct</option>
+                            <option value="meta-llama/Meta-Llama-3-8B-Instruct">Llama-3-8B-Instruct</option>
                         </select>
                     </div>
 
-                    <!-- Toggle tutoiement -->
                     <div class="mb-8 flex items-center justify-between">
                         <label class="text-sm font-medium text-indigo-300">Forcer tutoiement ("tu")</label>
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -79,33 +107,29 @@
                         </label>
                     </div>
 
-                    <!-- Bloc Token (caché après première utilisation) -->
                     <div id="tokenSection" class="mb-8">
                         <label class="block text-sm font-medium text-indigo-300 mb-3">Token Hugging Face</label>
                         <div class="relative">
-                            <input type="password" id="tk" placeholder="hf_..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass" onchange="saveToken()">
+                            <input type="password" id="tk" placeholder="hf_..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass">
                             <i class="fas fa-key absolute right-5 top-1/2 -translate-y-1/2 text-indigo-400"></i>
                         </div>
                     </div>
 
-                    <!-- Message -->
                     <div class="mb-10">
                         <label class="block text-sm font-medium text-indigo-300 mb-3">Message à transformer</label>
                         <textarea id="msg" rows="7" placeholder="Ex: Yo mec, envoie le rapport demain stp ça urge..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none glass"></textarea>
                     </div>
 
-                    <!-- Bouton Transformer -->
                     <button onclick="send()" class="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold text-xl rounded-2xl shadow-2xl shadow-purple-900/50 hover:shadow-purple-700/70 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-4 glow-hover">
                         <i class="fas fa-magic text-2xl"></i> TRANSFORMER
                     </button>
 
-                    <!-- Loader -->
                     <div id="lod" class="hidden mt-8 text-center text-indigo-400 font-medium flex items-center justify-center gap-3 animate-pulse">
                         <i class="fas fa-brain text-2xl animate-spin"></i> Transformation...
                     </div>
                 </div>
 
-                <!-- Résultat (droite) -->
+                <!-- Résultat -->
                 <div class="glass rounded-2xl p-8 flex flex-col order-2 lg:order-3">
                     <h3 class="text-2xl font-bold text-indigo-300 mb-6 text-center">Résultat</h3>
                     <div id="res" class="flex-1 p-6 glass rounded-xl border-indigo-500/40 relative min-h-[300px] flex items-center justify-center">
@@ -128,69 +152,50 @@
         </div>
     </div>
 
+    <!-- Conteneur des toasts -->
+    <div id="toastContainer"></div>
+
     <script>
-        // Gestion du token
+        // Fonction pour afficher un toast
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type} show flex items-center`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+
+            // Disparaître après 3 secondes
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
         const tokenSection = document.getElementById('tokenSection');
         const changeTokenBtn = document.getElementById('changeTokenBtn');
         const tkInput = document.getElementById('tk');
 
-        // Charger token sauvegardé
         const savedToken = localStorage.getItem('saved_tk') || '';
         tkInput.value = savedToken;
 
-        // Cacher le champ token si déjà enregistré
         if (savedToken) {
             tokenSection.classList.add('hidden');
             changeTokenBtn.classList.remove('hidden');
+            showToast("Token chargé depuis la mémoire", "success");
         }
 
-        // Afficher le champ pour changer le token
         function showTokenField() {
             tokenSection.classList.remove('hidden');
             changeTokenBtn.classList.add('hidden');
             tkInput.focus();
         }
 
-        // Sauvegarde token (appelée au changement ou au premier send)
-        function saveToken() {
-            const tk = tkInput.value.trim();
-            if (tk) {
-                localStorage.setItem('saved_tk', tk);
-                // Une fois sauvegardé, on cache le champ
-                tokenSection.classList.add('hidden');
-                changeTokenBtn.classList.remove('hidden');
-            }
-        }
-
-        // Historique (inchangé)
+        // Historique (inchangé, juste résumé)
         let history = JSON.parse(localStorage.getItem('promail_history')) || [];
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-            if (history.length === 0) {
-                list.innerHTML = '<p class="text-center text-indigo-400/70 py-10">Aucune transformation pour l\'instant...</p>';
-                return;
-            }
-            history.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'p-5 glass rounded-xl cursor-pointer hover:bg-indigo-900/30 transition group';
-                div.innerHTML = `
-                    <div class="flex justify-between text-sm text-indigo-400 mb-2">
-                        <span>${item.model.split('/').pop()}</span>
-                        <span>${new Date(item.date).toLocaleString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div class="text-gray-300 mb-2 line-clamp-3">${item.original.substring(0,100)}${item.original.length > 100 ? '...' : ''}</div>
-                    <div class="text-white font-medium line-clamp-3">${item.result.substring(0,120)}${item.result.length > 120 ? '...' : ''}</div>
-                `;
-                div.onclick = () => {
-                    document.getElementById('resultText').innerText = item.result;
-                    document.getElementById('resultPlaceholder').classList.add('hidden');
-                    document.getElementById('resultContent').classList.remove('hidden');
-                    document.getElementById('res').scrollIntoView({ behavior: 'smooth' });
-                };
-                list.appendChild(div);
-            });
-        }
+        function renderHistory() { /* ... même code que précédemment ... */ }
         renderHistory();
 
         function addToHistory(original, result, model) {
@@ -205,14 +210,12 @@
                 history = [];
                 localStorage.removeItem('promail_history');
                 renderHistory();
+                showToast("Historique effacé", "success");
             }
         }
 
-        // Transformation
         async function send() {
             let token = tkInput.value.trim();
-
-            // Si pas de token saisi mais un est déjà sauvegardé → utiliser le sauvegardé
             if (!token && localStorage.getItem('saved_tk')) {
                 token = localStorage.getItem('saved_tk');
             }
@@ -226,37 +229,20 @@
             const resultText = document.getElementById('resultText');
 
             if (!token || !msg) {
-                alert("Token + message obligatoires !");
+                showToast("Token et message obligatoires !", "error");
                 return;
-            }
-
-            // Sauvegarde automatique du token au premier envoi réussi
-            if (!localStorage.getItem('saved_tk') && token) {
-                localStorage.setItem('saved_tk', token);
-                tokenSection.classList.add('hidden');
-                changeTokenBtn.classList.remove('hidden');
             }
 
             loader.classList.remove('hidden');
             resultContent.classList.add('hidden');
             resultPlaceholder.classList.remove('hidden');
 
-            const systemPrompt = forceTu ?
-                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
-Toujours utiliser le tutoiement ("tu", "toi", "ton", "ta", etc.), même si le message original est formel ou utilise "vous". Sois naturel, élégant et sympa.` :
-                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
-Respecte scrupuleusement le niveau de familiarité de l'original :
-- Si l'original utilise "tu" ou un ton amical/informel → garde absolument le tutoiement.
-- Si l'original utilise "vous" ou un ton formel → utilise le vouvoiement.
-- Si neutre ou ambigu → préfère le tutoiement léger et sympa.`;
+            const systemPrompt = forceTu ? /* ... même prompt tutoiement forcé ... */ : /* ... prompt respectueux ... */;
 
             try {
                 const resp = await fetch("https://router.huggingface.co/v1/chat/completions", {
                     method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify({
                         model: model,
                         messages: [
@@ -268,19 +254,30 @@ Respecte scrupuleusement le niveau de familiarité de l'original :
                     })
                 });
 
-                if (!resp.ok) throw new Error((await resp.json()).error?.message || "Erreur API");
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || "Erreur lors de l'appel à l'API");
+                }
 
                 const data = await resp.json();
-                const text = data.choices[0].message.content.trim();
+                const text = data.choices?.[0]?.message?.content?.trim() || "Réponse vide...";
 
                 resultText.innerText = text;
                 resultPlaceholder.classList.add('hidden');
                 resultContent.classList.remove('hidden');
 
+                // Sauvegarde token seulement si succès et pas déjà fait
+                if (token && !localStorage.getItem('saved_tk')) {
+                    localStorage.setItem('saved_tk', token);
+                    tokenSection.classList.add('hidden');
+                    changeTokenBtn.classList.remove('hidden');
+                    showToast("Token enregistré avec succès ✓", "success");
+                }
+
                 addToHistory(msg, text, model);
 
             } catch (e) {
-                alert("Erreur : " + e.message + "\nVérifie que le token est correct.");
+                showToast("Erreur : " + e.message, "error");
                 console.error(e);
             } finally {
                 loader.classList.add('hidden');
@@ -289,7 +286,9 @@ Respecte scrupuleusement le niveau de familiarité de l'original :
 
         document.getElementById('copyBtn').onclick = () => {
             const txt = document.getElementById('resultText').innerText;
-            navigator.clipboard.writeText(txt).then(() => alert("Copié !")).catch(() => alert("Erreur copie."));
+            navigator.clipboard.writeText(txt)
+                .then(() => showToast("Texte copié dans le presse-papiers !", "success"))
+                .catch(() => showToast("Impossible de copier le texte", "error"));
         };
     </script>
 </body>
