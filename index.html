@@ -3,88 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | Stable</title>
+    <title>ProMail Expert | Correction IA</title>
     <style>
-        :root { --p: #4f46e5; --bg: #f3f4f6; }
-        body { font-family: sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        h2 { color: var(--p); text-align: center; margin-top: 0; }
-        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.8rem; color: #4b5563; }
+        body { font-family: sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        h2 { color: #4f46e5; text-align: center; }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.8rem; }
         input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; background: var(--p); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        #output { margin-top: 20px; display: none; background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--p); white-space: pre-wrap; }
-        .error { color: #dc2626; font-size: 0.8rem; margin-top: 10px; display: none; }
+        button { width: 100%; background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        #output { margin-top: 20px; display: none; background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #4f46e5; }
+        #error { color: #dc2626; font-size: 0.8rem; margin-top: 10px; display: none; text-align: center; }
     </style>
 </head>
 <body>
+    <div class="box">
+        <h2>ProMail Expert</h2>
+        <label>CLÉ API (TOKEN HUGGING FACE)</label>
+        <input type="password" id="tok" placeholder="hf_..." onchange="localStorage.setItem('mail_tok', this.value)">
+        <label>VOTRE MESSAGE</label>
+        <textarea id="msg" rows="4" placeholder="Tapez votre message ici..."></textarea>
+        <button onclick="corriger()" id="btn">AMÉLIORER MON MESSAGE</button>
+        <div id="loader" style="display:none; text-align:center; margin-top:10px;">⏳ Analyse en cours...</div>
+        <div id="error"></div>
+        <div id="output"></div>
+    </div>
 
-<div class="box">
-    <h2>ProMail Expert</h2>
-    
-    <label>CLÉ API (HUGGING FACE)</label>
-    <input type="password" id="tok" placeholder="hf_..." onchange="localStorage.setItem('my_tok', this.value)">
-    
-    <label>TEXTE À TRANSFORMER</label>
-    <textarea id="msg" rows="4" placeholder="Ex: je veux le compte rendu..."></textarea>
-    
-    <button onclick="generer()" id="btn">AMÉLIORER MON MESSAGE</button>
-    <div id="loader" style="display:none; text-align:center; margin-top:10px;">⏳ Travail en cours...</div>
-    
-    <div id="error" class="error"></div>
-    <div id="output"></div>
-</div>
+    <script>
+        // Charge le token sauvegardé
+        window.onload = () => {
+            document.getElementById('tok').value = localStorage.getItem('mail_tok') || '';
+        };
 
-<script>
-// Chargement auto de la clé
-window.onload = () => {
-    const s = localStorage.getItem('my_tok');
-    if(s) document.getElementById('tok').value = s;
-};
+        async function corriger() {
+            const t = document.getElementById('tok').value.trim();
+            const m = document.getElementById('msg').value.trim();
+            const out = document.getElementById('output');
+            const err = document.getElementById('error');
+            const btn = document.getElementById('btn');
+            const lod = document.getElementById('loader');
 
-async function generer() {
-    const t = document.getElementById('tok').value.trim();
-    const m = document.getElementById('msg').value.trim();
-    const out = document.getElementById('output');
-    const err = document.getElementById('error');
-    const btn = document.getElementById('btn');
-    const lod = document.getElementById('loader');
+            if(!t || !m) return alert("Veuillez remplir les deux cases.");
 
-    if(!t || !m) return alert("Complète les deux cases !");
+            btn.style.display = 'none';
+            lod.style.display = 'block';
+            out.style.display = 'none';
+            err.style.display = 'none';
 
-    btn.style.display = 'none';
-    lod.style.display = 'block';
-    out.style.display = 'none';
-    err.style.display = 'none';
+            try {
+                // Utilisation du modèle Mistral 7B (plus stable pour les requêtes directes)
+                const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+                    headers: { "Authorization": `Bearer ${t}`, "Content-Type": "application/json" },
+                    method: "POST",
+                    body: JSON.stringify({ inputs: "Reformule ce message de façon professionnelle et polie en français : " + m }),
+                });
 
-    try {
-        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3", {
-            headers: { "Authorization": `Bearer ${t}`, "Content-Type": "application/json" },
-            method: "POST",
-            body: JSON.stringify({ 
-                inputs: `[INST] Réécris ce message de façon très professionnelle et polie en français : ${m} [/INST]`,
-                parameters: { max_new_tokens: 300 }
-            }),
-        });
+                const data = await response.json();
 
-        const data = await response.json();
-
-        if (response.ok) {
-            let texte = data[0].generated_text;
-            if(texte.includes('[/INST]')) texte = texte.split('[/INST]').pop();
-            out.innerText = texte.trim();
-            out.style.display = 'block';
-        } else {
-            err.innerText = "Erreur : " + (data.error || "Clé invalide");
-            err.style.display = 'block';
+                if (response.ok) {
+                    let text = data[0].generated_text;
+                    // Nettoie la réponse si l'IA répète la consigne
+                    out.innerText = text.replace("Reformule ce message de façon professionnelle et polie en français : " + m, "").trim();
+                    out.style.display = 'block';
+                } else {
+                    err.innerText = "Erreur : " + (data.error || "Clé invalide");
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.innerText = "Blocage navigateur (CORS). Essayez de désactiver vos bloqueurs de pub ou testez sur téléphone.";
+                err.style.display = 'block';
+            } finally {
+                btn.style.display = 'block';
+                lod.style.display = 'none';
+            }
         }
-    } catch (e) {
-        err.innerText = "Blocage réseau. Désactive ton bloqueur de pub ou Brave Shield.";
-        err.style.display = 'block';
-    } finally {
-        btn.style.display = 'block';
-        lod.style.display = 'none';
-    }
-}
-</script>
+    </script>
 </body>
 </html>
