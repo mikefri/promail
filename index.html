@@ -39,7 +39,7 @@
         out.style.display = "none";
 
         try {
-            // L'ADRESSE EXACTE DEMANDÉE PAR L'IA DANS TON ERREUR PRÉCÉDENTE
+            // L'ADRESSE EXACTE RECOMMANDÉE PAR HUGGING FACE DANS TON ERREUR
             const url = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3";
             
             const response = await fetch(url, {
@@ -50,22 +50,22 @@
                 },
                 body: JSON.stringify({ 
                     inputs: `[INST] Réécris ce message de façon professionnelle et polie en français : ${m} [/INST]`,
-                    parameters: { max_new_tokens: 300 }
+                    parameters: { max_new_tokens: 300, return_full_text: false }
                 })
             });
 
             const data = await response.json();
             
             if (response.ok) {
-                let text = data[0].generated_text;
-                // On nettoie pour ne garder que la réponse pro
-                out.innerText = text.split('[/INST]').pop().trim();
+                // Gestion du format de réponse (Tableau ou Objet)
+                let text = Array.isArray(data) ? data[0].generated_text : data.generated_text;
+                out.innerText = text.trim();
                 out.style.display = "block";
             } else {
                 alert("Erreur : " + (data.error || "Problème avec le serveur IA"));
             }
         } catch (err) {
-            alert("Connexion impossible. Vérifie ta clé ou tente en navigation privée.");
+            alert("Connexion impossible. Tente en navigation privée.");
         } finally {
             lod.style.display = "none";
         }
