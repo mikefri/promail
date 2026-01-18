@@ -3,179 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | Correction IA</title>
+    <title>ProMail Expert | IA Gratuit</title>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg: #f8fafc;
-            --text: #1e293b;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background: white;
-            width: 100%;
-            max-width: 550px;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            margin: 20px;
-        }
-
-        h1 { font-size: 1.5rem; margin-bottom: 8px; color: var(--primary); text-align: center; }
-        p.subtitle { text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
-
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
-        
-        textarea, input {
-            width: 100%;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 1rem;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-            transition: border 0.2s;
-        }
-
-        button {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button:hover { background: var(--primary-hover); }
-
-        #output-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            display: none;
-        }
-
-        .result-box {
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .loader { text-align: center; display: none; margin-top: 15px; color: var(--primary); font-weight: bold; }
-        .save-msg { font-size: 0.75rem; color: #10b981; margin-top: -15px; margin-bottom: 15px; display: none; }
+        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.4rem; color: var(--primary); text-align: center; }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.8rem; }
+        textarea, input { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+        button { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        #output-section { margin-top: 20px; display: none; background: #f1f5f9; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
+        .loader { text-align: center; display: none; color: var(--primary); margin: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>ProMail Expert</h1>
-    <p class="subtitle">Vos e-mails professionnels en un clic</p>
-
-    <label for="tokenInput">Clé API (Token Hugging Face)</label>
-    <input type="password" id="tokenInput" placeholder="Collez votre hf_..." onchange="saveToken()" />
-    <div id="saveMsg" class="save-msg">✓ Clé enregistrée localement</div>
-
-    <label for="mailInput">Votre texte à corriger</label>
-    <textarea id="mailInput" placeholder="Ex: je veut savoir si c ok..."></textarea>
-
-    <button onclick="improveEmail()" id="mainBtn">Améliorer mon message</button>
-
-    <div id="loader" class="loader">L'IA rédige votre message...</div>
+    <label>CLÉ API (TOKEN HUGGING FACE)</label>
+    <input type="password" id="tokenInput" placeholder="hf_..." onchange="saveToken()">
+    
+    <label>VOTRE MESSAGE</label>
+    <textarea id="mailInput" rows="4" placeholder="Tapez votre message ici..."></textarea>
+    
+    <button onclick="improveEmail()" id="btn">AMÉLIORER MON MESSAGE</button>
+    <div id="loader" class="loader">L'IA travaille...</div>
 
     <div id="output-section">
-        <label>Résultat :</label>
-        <div id="resultText" class="result-box"></div>
-        <button onclick="copyResult()" id="copyBtn" style="background: #10b981;">Copier le message</button>
+        <div id="resultText"></div>
+        <button onclick="copyText()" style="background:#10b981">Copier</button>
     </div>
 </div>
 
 <script>
-// Charger le token automatiquement au démarrage
-window.onload = function() {
-    const savedToken = localStorage.getItem('hf_token');
-    if (savedToken) {
-        document.getElementById('tokenInput').value = savedToken;
-        document.getElementById('saveMsg').style.display = 'block';
-    }
+window.onload = () => {
+    const saved = localStorage.getItem('hf_token');
+    if(saved) document.getElementById('tokenInput').value = saved;
 };
 
 function saveToken() {
-    const token = document.getElementById('tokenInput').value;
-    localStorage.setItem('hf_token', token);
-    document.getElementById('saveMsg').style.display = 'block';
+    localStorage.setItem('hf_token', document.getElementById('tokenInput').value);
 }
 
 async function improveEmail() {
     const text = document.getElementById('mailInput').value;
     const token = document.getElementById('tokenInput').value;
-    const btn = document.getElementById('mainBtn');
-    const loader = document.getElementById('loader');
-    const output = document.getElementById('output-section');
-    const resultDiv = document.getElementById('resultText');
+    if(!text || !token) return alert("Remplissez tout !");
 
-    if (!text || !token) {
-        alert("Texte et Token requis !");
-        return;
-    }
-
-    btn.style.display = 'none';
-    loader.style.display = 'block';
-    output.style.display = 'none';
+    document.getElementById('btn').style.display = 'none';
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('output-section').style.display = 'none';
 
     try {
-        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
-            headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
+        const response = await fetch("https://api-inference.huggingface.co/models/google/gemma-2-9b-it", {
+            headers: { "Authorization": `Bearer ${token.trim()}`, "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({
-                inputs: `[INST] Tu es un expert. Corrige et reformule de façon pro et diplomate en français : ${text} [/INST]`,
-                parameters: { max_new_tokens: 500 }
+                inputs: `Corrige les fautes et reformule en français professionnel : ${text}`,
+                parameters: { return_full_text: false, max_new_tokens: 250 }
             }),
         });
 
         const data = await response.json();
-        let finalOutput = data[0].generated_text.split('[/INST]').pop().trim();
-
-        resultDiv.innerText = finalOutput;
-        output.style.display = 'block';
-    } catch (error) {
-        alert("Erreur de connexion à l'IA.");
+        // Gestion de la réponse qui peut être un tableau ou un objet d'erreur
+        const result = data[0]?.generated_text || data.generated_text || "Erreur : " + (data.error || "IA indisponible");
+        
+        document.getElementById('resultText').innerText = result;
+        document.getElementById('output-section').style.display = 'block';
+    } catch (e) {
+        alert("Erreur de connexion.");
     } finally {
-        btn.style.display = 'block';
-        loader.style.display = 'none';
+        document.getElementById('btn').style.display = 'block';
+        document.getElementById('loader').style.display = 'none';
     }
 }
 
-function copyResult() {
-    const text = document.getElementById('resultText').innerText;
-    navigator.clipboard.writeText(text);
-    const btn = document.getElementById('copyBtn');
-    btn.innerText = "Copié !";
-    setTimeout(() => { btn.innerText = "Copier le message"; }, 2000);
+function copyText() {
+    navigator.clipboard.writeText(document.getElementById('resultText').innerText);
+    alert("Copié !");
 }
 </script>
-
 </body>
 </html>
