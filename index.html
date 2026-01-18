@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | v6</title>
+    <title>ProMail Expert | Version Router</title>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
@@ -17,16 +17,16 @@
 
 <div class="card">
     <h2>ProMail Expert</h2>
-    <input type="password" id="tk" placeholder="Ton token hf_..." onchange="localStorage.setItem('mail_v6', this.value)">
-    <textarea id="msg" rows="5" placeholder="Ton message ici..."></textarea>
+    <input type="password" id="tk" placeholder="Colle ta clé hf_..." onchange="localStorage.setItem('pro_token', this.value)">
+    <textarea id="msg" rows="5" placeholder="Ton message à transformer..."></textarea>
     <button onclick="send()">AMÉLIORER MON MESSAGE</button>
-    <p id="lod" style="display:none">⏳ L'IA génère ton message...</p>
+    <p id="lod" style="display:none">⏳ L'IA génère le message...</p>
     <div id="res"></div>
 </div>
 
 <script>
-    // Chargement auto du token
-    document.getElementById('tk').value = localStorage.getItem('mail_v6') || '';
+    // Chargement auto de la clé sauvegardée
+    document.getElementById('tk').value = localStorage.getItem('pro_token') || '';
 
     async function send() {
         const t = document.getElementById('tk').value.trim();
@@ -34,22 +34,22 @@
         const out = document.getElementById('res');
         const lod = document.getElementById('lod');
 
-        if(!t || !m) return alert("Remplis les deux cases !");
+        if(!t || !m) return alert("Remplis la clé et le message !");
         lod.style.display = "block";
         out.style.display = "none";
 
         try {
-            // NOUVELLE ADRESSE DEMANDÉE PAR HUGGING FACE
-            const target = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3";
+            // L'ADRESSE EXACTE DEMANDÉE PAR L'IA DANS TON ERREUR PRÉCÉDENTE
+            const url = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3";
             
-            const response = await fetch(target, {
+            const response = await fetch(url, {
                 method: "POST",
                 headers: { 
                     "Authorization": `Bearer ${t}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ 
-                    inputs: `[INST] Réécris ce message de façon professionnelle, polie et sans fautes en français : ${m} [/INST]`,
+                    inputs: `[INST] Réécris ce message de façon professionnelle et polie en français : ${m} [/INST]`,
                     parameters: { max_new_tokens: 300 }
                 })
             });
@@ -58,13 +58,14 @@
             
             if (response.ok) {
                 let text = data[0].generated_text;
+                // On nettoie pour ne garder que la réponse pro
                 out.innerText = text.split('[/INST]').pop().trim();
                 out.style.display = "block";
             } else {
-                alert("Erreur : " + (data.error || "Problème avec le modèle"));
+                alert("Erreur : " + (data.error || "Problème avec le serveur IA"));
             }
         } catch (err) {
-            alert("Erreur de connexion. Vérifie ta clé API.");
+            alert("Connexion impossible. Vérifie ta clé ou tente en navigation privée.");
         } finally {
             lod.style.display = "none";
         }
