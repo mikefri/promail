@@ -3,94 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Express • AI Pro Transformer</title>
+    <title>ProMail Express • AI Pro Transformer 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 50% { box-shadow: 0 0 20px 10px rgba(99, 102, 241, 0); } }
-        .fade-in-up { animation: fadeInUp 0.7s ease-out forwards; }
-        .glow-hover:hover { box-shadow: 0 0 25px 10px rgba(99, 102, 241, 0.3); transform: translateY(-2px); }
-        .glass { backdrop-filter: blur(16px); background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(99, 102, 241, 0.2); }
-        body { background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81); background-attachment: fixed; }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); } 50% { box-shadow: 0 0 30px 15px rgba(99, 102, 241, 0); } }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .glow-hover:hover { box-shadow: 0 0 35px 15px rgba(99, 102, 241, 0.4); transform: translateY(-3px); }
+        .glass { backdrop-filter: blur(20px); background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(99, 102, 241, 0.25); }
+        body { 
+            background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81, #4f46e5); 
+            background-attachment: fixed; 
+            overflow-x: hidden;
+        }
+        .particles { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; 
+            background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%);
+            animation: pulseGlow 12s infinite alternate;
+        }
     </style>
 </head>
-<body class="min-h-screen text-gray-100 flex items-center justify-center p-6 font-sans">
-    <div class="w-full max-w-2xl relative">
-        <!-- Main Card avec glassmorphism premium -->
-        <div class="glass rounded-3xl p-10 shadow-2xl shadow-indigo-900/30 transition-all duration-500 hover:shadow-indigo-700/40">
+<body class="min-h-screen text-gray-100 flex items-center justify-center p-6 relative font-sans">
+    <div class="particles"></div>
+
+    <div class="w-full max-w-2xl relative z-10">
+        <div class="glass rounded-3xl p-10 shadow-2xl shadow-indigo-900/50 transition-all duration-500 hover:shadow-indigo-700/60">
             <!-- Header -->
             <div class="flex items-center justify-between mb-10">
                 <h1 class="text-4xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-4">
                     <i class="fas fa-wand-magic-sparkles text-4xl animate-pulse"></i>
                     ProMail Express
                 </h1>
-                <span class="text-xs uppercase tracking-widest text-indigo-300 opacity-80">AI Powered • 2026</span>
+                <span class="text-xs uppercase tracking-widest text-indigo-300 opacity-80">AI Multi-Models • Historique</span>
+            </div>
+
+            <!-- Sélecteur de modèle -->
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-indigo-300 mb-3">Choisis ton modèle IA</label>
+                <select id="modelSelect" class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass">
+                    <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct (Équilibré, excellent FR)</option>
+                    <option value="HuggingFaceTB/SmolLM3-3B">SmolLM3-3B (Ultra-rapide)</option>
+                    <option value="meta-llama/Llama-3.2-3B-Instruct">Llama-3.2-3B-Instruct (Fiable & léger)</option>
+                    <option value="meta-llama/Meta-Llama-3-8B-Instruct">Llama-3-8B-Instruct (Premium classique)</option>
+                </select>
             </div>
 
             <!-- Input clé -->
             <div class="mb-8">
-                <label class="block text-sm font-medium text-indigo-300 mb-3">Hugging Face Inference Token</label>
+                <label class="block text-sm font-medium text-indigo-300 mb-3">Hugging Face Token (Inference Providers)</label>
                 <div class="relative">
-                    <input type="password" id="tk" placeholder="hf_..." 
-                           class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 glass"
-                           onchange="localStorage.setItem('saved_tk', this.value)">
+                    <input type="password" id="tk" placeholder="hf_..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass" onchange="saveToken()">
                     <i class="fas fa-key absolute right-5 top-1/2 -translate-y-1/2 text-indigo-400"></i>
                 </div>
             </div>
 
             <!-- Textarea -->
             <div class="mb-10">
-                <label class="block text-sm font-medium text-indigo-300 mb-3">Ton message brut à transformer</label>
-                <textarea id="msg" rows="6" placeholder="Ex: Yo ça va ? Envoie moi le rapport stp demain..."
-                          class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 resize-none glass"></textarea>
+                <label class="block text-sm font-medium text-indigo-300 mb-3">Message à transformer</label>
+                <textarea id="msg" rows="6" placeholder="Ex: Yo mec, envoie le rapport demain stp ça urge..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none glass"></textarea>
             </div>
 
-            <!-- Bouton magique -->
-            <button onclick="send()" 
-                    class="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold text-xl rounded-2xl shadow-2xl shadow-purple-900/40 hover:shadow-purple-700/60 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-4 glow-hover animate-pulse-glow">
-                <i class="fas fa-magic text-2xl"></i>
-                TRANSFORMER EN PRO
+            <!-- Bouton -->
+            <button onclick="send()" class="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold text-xl rounded-2xl shadow-2xl shadow-purple-900/50 hover:shadow-purple-700/70 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-4 glow-hover">
+                <i class="fas fa-magic text-2xl"></i> TRANSFORMER
             </button>
 
-            <!-- Loader futuriste -->
+            <!-- Loader -->
             <div id="lod" class="hidden mt-8 text-center text-indigo-400 font-medium flex items-center justify-center gap-3 animate-pulse">
-                <i class="fas fa-brain text-2xl animate-spin"></i>
-                L'IA reformule en mode executive...
+                <i class="fas fa-brain text-2xl animate-spin"></i> Transformation en cours...
             </div>
 
-            <!-- Résultat avec glass card -->
+            <!-- Résultat -->
             <div id="res" class="hidden mt-10 p-8 glass rounded-2xl border-indigo-500/40 fade-in-up relative">
-                <button id="copyBtn" class="absolute top-4 right-4 text-indigo-300 hover:text-white transition-colors text-xl" title="Copier le résultat">
+                <button id="copyBtn" class="absolute top-4 right-4 text-indigo-300 hover:text-white transition-colors text-xl" title="Copier">
                     <i class="fas fa-copy"></i>
                 </button>
                 <div id="resultText" class="text-lg leading-relaxed text-gray-200 whitespace-pre-wrap"></div>
             </div>
 
-            <!-- Footer info -->
-            <p class="mt-8 text-center text-sm text-indigo-300/70">
-                Modèle : Qwen2.5-7B-Instruct • Ultra-rapide & excellent en français • Change-le dans le code pour tester SmolLM2 ou Llama-3.2
+            <!-- Historique -->
+            <div class="mt-12">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-indigo-300">Historique des transformations</h3>
+                    <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300 transition">Effacer tout</button>
+                </div>
+                <div id="historyList" class="max-h-80 overflow-y-auto space-y-4 pr-2"></div>
+            </div>
+
+            <!-- Footer -->
+            <p class="mt-10 text-center text-sm text-indigo-300/70">
+                Powered by Hugging Face Inference • Tous modèles open-source & gratuits
             </p>
         </div>
-
-        <!-- Subtle floating particles / glow orb (optionnel mais cool) -->
-        <div class="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-indigo-500/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none"></div>
     </div>
 
     <script>
-        // Load saved token
+        // --- Sauvegarde token ---
+        function saveToken() {
+            const tk = document.getElementById('tk').value.trim();
+            if (tk) localStorage.setItem('saved_tk', tk);
+        }
         document.getElementById('tk').value = localStorage.getItem('saved_tk') || '';
 
-        // Send function
+        // --- Historique ---
+        let history = JSON.parse(localStorage.getItem('promail_history')) || [];
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            history.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'p-5 glass rounded-xl cursor-pointer hover:bg-indigo-900/30 transition group';
+                div.innerHTML = `
+                    <div class="flex justify-between text-sm text-indigo-400 mb-2">
+                        <span>${item.model.split('/').pop()}</span>
+                        <span>${new Date(item.date).toLocaleString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div class="text-gray-300 mb-2 line-clamp-3">${item.original.substring(0,120)}${item.original.length > 120 ? '...' : ''}</div>
+                    <div class="text-white font-medium">${item.result.substring(0,150)}${item.result.length > 150 ? '...' : ''}</div>
+                `;
+                div.onclick = () => {
+                    document.getElementById('resultText').innerText = item.result;
+                    document.getElementById('res').classList.remove('hidden');
+                    window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+                };
+                list.appendChild(div);
+            });
+        }
+        renderHistory();
+
+        function addToHistory(original, result, model) {
+            history.unshift({ original, result, model, date: Date.now() });
+            if (history.length > 20) history.pop(); // Limite à 20
+            localStorage.setItem('promail_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function clearHistory() {
+            if (confirm("Vraiment effacer tout l'historique ?")) {
+                history = [];
+                localStorage.removeItem('promail_history');
+                renderHistory();
+            }
+        }
+
+        // --- Send ---
         async function send() {
             const token = document.getElementById('tk').value.trim();
             const msg = document.getElementById('msg').value.trim();
+            const model = document.getElementById('modelSelect').value;
             const loader = document.getElementById('lod');
             const res = document.getElementById('res');
             const resultText = document.getElementById('resultText');
 
             if (!token || !msg) {
-                alert("Token + message requis !");
+                alert("Token + message obligatoires !");
                 return;
             }
 
@@ -105,7 +172,7 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        model: "Qwen/Qwen2.5-7B-Instruct",
+                        model: model,
                         messages: [{
                             role: "user",
                             content: `Reformule ce message de façon très professionnelle, polie, concise et élégante (style email professionnel français parfait) :\n\n${msg}`
@@ -115,7 +182,10 @@
                     })
                 });
 
-                if (!resp.ok) throw new Error((await resp.json()).error?.message || "Erreur API");
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error?.message || `Erreur HTTP ${resp.status}`);
+                }
 
                 const data = await resp.json();
                 const text = data.choices[0].message.content.trim();
@@ -123,20 +193,23 @@
                 resultText.innerText = text;
                 res.classList.remove('hidden');
 
+                // Sauvegarde historique
+                addToHistory(msg, text, model);
+
             } catch (e) {
-                alert("Erreur : " + e.message + "\nVérifie token/modèle !");
+                alert("Erreur : " + e.message + "\nVérifie token / modèle / quota !");
                 console.error(e);
             } finally {
                 loader.classList.add('hidden');
             }
         }
 
-        // Copy functionality
+        // Copy
         document.getElementById('copyBtn').onclick = () => {
             const txt = document.getElementById('resultText').innerText;
             navigator.clipboard.writeText(txt).then(() => {
-                alert("Copié ! Prêt à coller dans ton email.");
-            }).catch(() => alert("Copie impossible."));
+                alert("Copié dans le presse-papiers !");
+            }).catch(() => alert("Erreur copie."));
         };
     </script>
 </body>
