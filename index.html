@@ -1,12 +1,140 @@
-async function processEmail() {
-    const text = document.getElementById('inputField').value;
-    const token = prompt("Veuillez coller votre token Hugging Face (hf_...) :"); 
-    const resultDiv = document.getElementById('result');
-    
-    if(!text || !token) return alert("Texte et Token requis");
-    
-    resultDiv.style.display = 'block';
-    resultDiv.innerText = "L'IA réfléchit...";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProMail Expert | Correction IA</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin: 20px;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 8px; color: var(--primary); text-align: center; }
+        p.subtitle { text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
+        
+        textarea, input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            transition: border 0.2s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: var(--primary-hover); }
+
+        #output-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .result-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .copy-btn {
+            background: #10b981;
+            margin-top: 10px;
+        }
+
+        .loader { text-align: center; display: none; margin-top: 15px; color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ProMail Expert</h1>
+    <p class="subtitle">Transformez vos brouillons en e-mails professionnels</p>
+
+    <label for="tokenInput">Clé API (Token Hugging Face)</label>
+    <input type="password" id="tokenInput" placeholder="Collez votre hf_..." />
+
+    <label for="mailInput">Votre texte à corriger</label>
+    <textarea id="mailInput" placeholder="Ex: salut je veut savoir si c ok pour demain..."></textarea>
+
+    <button onclick="improveEmail()" id="mainBtn">Améliorer mon message</button>
+
+    <div id="loader" class="loader">L'IA rédige votre message...</div>
+
+    <div id="output-section">
+        <label>Message reformulé :</label>
+        <div id="resultText" class="result-box"></div>
+        <button class="copy-btn" onclick="copyResult()" id="copyBtn">Copier le message</button>
+    </div>
+</div>
+
+<script>
+async function improveEmail() {
+    const text = document.getElementById('mailInput').value;
+    const token = document.getElementById('tokenInput').value;
+    const btn = document.getElementById('mainBtn');
+    const loader = document.getElementById('loader');
+    const output = document.getElementById('output-section');
+    const resultDiv = document.getElementById('resultText');
+
+    if (!text || !token) {
+        alert("Veuillez remplir le texte et votre Token.");
+        return;
+    }
+
+    btn.style.display = 'none';
+    loader.style.display = 'block';
+    output.style.display = 'none';
 
     try {
         const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
@@ -16,18 +144,40 @@ async function processEmail() {
             },
             method: "POST",
             body: JSON.stringify({
-                inputs: `[INST] Tu es un expert en communication. Corrige les fautes et reformule ce mail pour qu'il soit professionnel, poli et en français : ${text} [/INST]`,
-                parameters: { max_new_tokens: 500 }
+                inputs: `[INST] Tu es un expert en communication. Corrige les fautes d'orthographe et reformule le texte suivant pour qu'il soit professionnel, poli et diplomate en français. Ne réponds que par le texte corrigé, sans commentaires : ${text} [/INST]`,
+                parameters: { max_new_tokens: 500, temperature: 0.7 }
             }),
         });
-        
+
         const data = await response.json();
-        // Nettoyage de la réponse pour ne garder que le texte corrigé
-        const fullText = data[0].generated_text;
-        const cleanedText = fullText.split('[/INST]').pop().trim();
+        let finalOutput = data[0].generated_text;
         
-        resultDiv.innerText = cleanedText;
+        // Nettoyage de la réponse
+        if (finalOutput.includes('[/INST]')) {
+            finalOutput = finalOutput.split('[/INST]').pop().trim();
+        }
+
+        resultDiv.innerText = finalOutput;
+        output.style.display = 'block';
     } catch (error) {
-        resultDiv.innerText = "Erreur : Vérifiez votre token ou la connexion.";
+        alert("Erreur : Vérifiez votre Token ou votre connexion.");
+    } finally {
+        btn.style.display = 'block';
+        loader.style.display = 'none';
     }
 }
+
+function copyResult() {
+    const text = document.getElementById('resultText').innerText;
+    const btn = document.getElementById('copyBtn');
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = "Copié !";
+        setTimeout(() => { btn.innerText = originalText; }, 2000);
+    });
+}
+</script>
+
+</body>
+</html>
