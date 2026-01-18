@@ -49,6 +49,15 @@
                 </select>
             </div>
 
+            <!-- Toggle forcer tutoiement -->
+            <div class="mb-8 flex items-center justify-between">
+                <label class="text-sm font-medium text-indigo-300">Forcer le tutoiement (toujours "tu")</label>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="forceTu" class="sr-only peer">
+                    <div class="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+            </div>
+
             <!-- Input clé -->
             <div class="mb-8">
                 <label class="block text-sm font-medium text-indigo-300 mb-3">Hugging Face Token (Inference Providers)</label>
@@ -99,14 +108,14 @@
     </div>
 
     <script>
-        // --- Sauvegarde token ---
+        // Sauvegarde token
         function saveToken() {
             const tk = document.getElementById('tk').value.trim();
             if (tk) localStorage.setItem('saved_tk', tk);
         }
         document.getElementById('tk').value = localStorage.getItem('saved_tk') || '';
 
-        // --- Historique ---
+        // Historique
         let history = JSON.parse(localStorage.getItem('promail_history')) || [];
         function renderHistory() {
             const list = document.getElementById('historyList');
@@ -134,7 +143,7 @@
 
         function addToHistory(original, result, model) {
             history.unshift({ original, result, model, date: Date.now() });
-            if (history.length > 20) history.pop(); // Limite à 20
+            if (history.length > 20) history.pop();
             localStorage.setItem('promail_history', JSON.stringify(history));
             renderHistory();
         }
@@ -147,11 +156,12 @@
             }
         }
 
-        // --- Send ---
+        // Fonction principale de transformation
         async function send() {
             const token = document.getElementById('tk').value.trim();
             const msg = document.getElementById('msg').value.trim();
             const model = document.getElementById('modelSelect').value;
+            const forceTu = document.getElementById('forceTu').checked;
             const loader = document.getElementById('lod');
             const res = document.getElementById('res');
             const resultText = document.getElementById('resultText');
@@ -164,6 +174,17 @@
             loader.classList.remove('hidden');
             res.classList.add('hidden');
 
+            // Choix du prompt système selon le toggle
+            const systemPrompt = forceTu ?
+                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
+Toujours utiliser le tutoiement ("tu", "toi", "ton", "ta", etc.), même si le message original est formel ou utilise "vous". Sois naturel, élégant et sympa.` :
+                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
+Respecte scrupuleusement le niveau de familiarité de l'original :
+- Si l'original utilise "tu" ou un ton amical/informel → garde absolument le tutoiement ("tu", "toi", etc.).
+- Si l'original utilise "vous" ou un ton formel → utilise le vouvoiement ("vous", "votre", etc.).
+- Si neutre ou ambigu → préfère le tutoiement léger et sympa.
+Ne passe JAMAIS au vouvoiement si l'original est en "tu".`;
+
             try {
                 const resp = await fetch("https://router.huggingface.co/v1/chat/completions", {
                     method: "POST",
@@ -173,10 +194,10 @@
                     },
                     body: JSON.stringify({
                         model: model,
-                        messages: [{
-                            role: "user",
-                            content: `Reformule ce message de façon très professionnelle, polie, concise et élégante (style email professionnel français parfait) :\n\n${msg}`
-                        }],
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: `Reformule ce message de façon très professionnelle, polie et concise (style email professionnel français parfait) :\n\n${msg}` }
+                        ],
                         max_tokens: 400,
                         temperature: 0.65
                     })
@@ -193,23 +214,22 @@
                 resultText.innerText = text;
                 res.classList.remove('hidden');
 
-                // Sauvegarde historique
                 addToHistory(msg, text, model);
 
             } catch (e) {
-                alert("Erreur : " + e.message + "\nVérifie token / modèle / quota !");
+                alert("Erreur : " + e.message + "\nVérifie ton token, le modèle choisi ou ton quota Hugging Face.");
                 console.error(e);
             } finally {
                 loader.classList.add('hidden');
             }
         }
 
-        // Copy
+        // Copie du résultat
         document.getElementById('copyBtn').onclick = () => {
             const txt = document.getElementById('resultText').innerText;
             navigator.clipboard.writeText(txt).then(() => {
                 alert("Copié dans le presse-papiers !");
-            }).catch(() => alert("Erreur copie."));
+            }).catch(() => alert("Erreur lors de la copie."));
         };
     </script>
 </body>
