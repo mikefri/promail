@@ -3,74 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | v4</title>
+    <title>ProMail Expert | v5</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        h2 { color: #4f46e5; margin-bottom: 20px; }
-        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 15px; background: #4f46e5; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #4338ca; }
-        #res { margin-top: 25px; padding: 15px; background: #f8fafc; border-left: 5px solid #4f46e5; display: none; text-align: left; color: #1e293b; line-height: 1.5; border-radius: 0 10px 10px 0; }
-        .loading { display: none; color: #6366f1; font-weight: bold; margin-top: 15px; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        h2 { color: #4f46e5; }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #res { margin-top: 20px; padding: 15px; background: #f8fafc; border-left: 5px solid #4f46e5; display: none; text-align: left; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>ProMail Expert</h2>
-    <input type="password" id="tk" placeholder="Votre token hf_..." onchange="localStorage.setItem('user_token', this.value)">
-    <textarea id="msg" rows="5" placeholder="Écrivez votre message ici..."></textarea>
-    <button onclick="makePro()">TRANSFORMER</button>
-    
-    <div id="lod" class="loading">⚙️ L'IA réfléchit...</div>
+    <input type="password" id="tk" placeholder="Token hf_..." onchange="localStorage.setItem('mail_v5', this.value)">
+    <textarea id="msg" rows="5" placeholder="Votre message..."></textarea>
+    <button onclick="send()">AMÉLIORER MON MESSAGE</button>
+    <p id="lod" style="display:none">⏳ L'IA travaille via relais sécurisé...</p>
     <div id="res"></div>
 </div>
 
-<script type="module">
-    // On utilise la bibliothèque officielle pour éviter les erreurs CORS
-    import { HfInference } from "https://cdn.jsdelivr.net/npm/@huggingface/inference@2.6.4/+esm";
-
+<script>
     // Chargement auto du token
-    document.getElementById('tk').value = localStorage.getItem('user_token') || '';
+    document.getElementById('tk').value = localStorage.getItem('mail_v5') || '';
 
-    window.makePro = async function() {
-        const token = document.getElementById('tk').value.trim();
-        const message = document.getElementById('msg').value.trim();
-        const resDiv = document.getElementById('res');
+    async function send() {
+        const t = document.getElementById('tk').value.trim();
+        const m = document.getElementById('msg').value.trim();
+        const out = document.getElementById('res');
         const lod = document.getElementById('lod');
 
-        if (!token || !message) {
-            alert("Veuillez remplir le token et le message.");
-            return;
-        }
-
+        if(!t || !m) return alert("Remplissez tout !");
         lod.style.display = "block";
-        resDiv.style.display = "none";
+        out.style.display = "none";
 
         try {
-            const hf = new HfInference(token);
+            // Utilisation d'un proxy CORS pour éviter le blocage navigateur
+            const proxy = "https://corsproxy.io/?";
+            const target = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3";
             
-            // On utilise un modèle très stable : Mistral 7B v0.3
-            const response = await hf.textGeneration({
-                model: 'mistralai/Mistral-7B-Instruct-v0.3',
-                inputs: `[INST] Tu es un expert en secrétariat. Reformule ce message pour qu'il soit professionnel, poli et sans fautes en français. Ne donne que le résultat final : ${message} [/INST]`,
-                parameters: { max_new_tokens: 500, temperature: 0.7 }
+            const response = await fetch(proxy + encodeURIComponent(target), {
+                method: "POST",
+                headers: { 
+                    "Authorization": `Bearer ${t}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 
+                    inputs: `[INST] Réécris ce message de façon professionnelle et polie en français : ${m} [/INST]`,
+                    parameters: { max_new_tokens: 300 }
+                })
             });
 
-            let out = response.generated_text;
-            if (out.includes('[/INST]')) out = out.split('[/INST]').pop();
+            const data = await response.json();
             
-            resDiv.innerText = out.trim();
-            resDiv.style.display = "block";
-        } catch (error) {
-            console.error(error);
-            alert("Erreur de connexion. Vérifiez que votre token est correct et que vous avez bien une connexion internet.");
+            if (response.ok) {
+                let text = data[0].generated_text;
+                out.innerText = text.split('[/INST]').pop().trim();
+                out.style.display = "block";
+            } else {
+                alert("L'IA répond : " + (data.error || "Vérifiez votre token"));
+            }
+        } catch (err) {
+            alert("Erreur de connexion. Si vous êtes sur mobile, essayez de rafraîchir.");
         } finally {
             lod.style.display = "none";
         }
-    };
+    }
 </script>
-
 </body>
 </html>
