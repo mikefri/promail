@@ -2,62 +2,70 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <title>ProMail Final</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | Mode Stable</title>
     <style>
-        body { font-family: sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .box { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        h2 { color: #4f46e5; text-align: center; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px; }
-        button { width: 100%; background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #output { margin-top: 20px; display: none; background: #eff6ff; padding: 15px; border-radius: 8px; border-left: 4px solid #4f46e5; white-space: pre-wrap; }
-        #err { color: #dc2626; font-size: 0.8rem; margin-top: 10px; display: none; }
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; display: flex; justify-content: center; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; text-align: center; font-size: 1.2rem; }
+        input, textarea { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #res { margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #1a73e8; display: none; white-space: pre-wrap; }
+        .loader { display: none; color: #666; font-size: 0.8rem; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="box">
+    <div class="card">
         <h2>ProMail Expert</h2>
-        <input type="password" id="tok" placeholder="Clé hf_..." onchange="localStorage.setItem('mtok', this.value)">
-        <textarea id="msg" rows="4" placeholder="Votre message..."></textarea>
-        <button onclick="run()">AMÉLIORER MON MESSAGE</button>
-        <div id="lod" style="display:none; text-align:center; margin-top:10px;">⏳ IA en cours...</div>
-        <div id="err"></div>
-        <div id="output"></div>
+        <input type="password" id="tk" placeholder="Colle ton token hf_..." onchange="localStorage.setItem('tp_mail', this.value)">
+        <textarea id="msg" rows="5" placeholder="Ton texte ici..."></textarea>
+        <button onclick="send()">Transformer en message Pro</button>
+        <div id="lod" class="loader">⚙️ Connexion à l'IA en cours...</div>
+        <div id="res"></div>
     </div>
 
     <script>
-        document.getElementById('tok').value = localStorage.getItem('mtok') || '';
+        // Restauration auto du token
+        document.getElementById('tk').value = localStorage.getItem('tp_mail') || '';
 
-        async function run() {
-            const t = document.getElementById('tok').value.trim();
+        async function send() {
+            const t = document.getElementById('tk').value.trim();
             const m = document.getElementById('msg').value.trim();
-            if(!t || !m) return alert("Remplis tout !");
+            const out = document.getElementById('res');
+            const lod = document.getElementById('lod');
 
-            document.getElementById('lod').style.display = 'block';
-            document.getElementById('output').style.display = 'none';
-            document.getElementById('err').style.display = 'none';
+            if(!t || !m) return alert("Complète les champs !");
+
+            lod.style.display = "block";
+            out.style.display = "none";
 
             try {
-                const r = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
-                    headers: { "Authorization": `Bearer ${t}`, "Content-Type": "application/json" },
+                const response = await fetch("https://api-inference.huggingface.co/models/google/gemma-1.1-7b-it", {
                     method: "POST",
-                    body: JSON.stringify({ inputs: `[INST] Réécris ce message en français professionnel et poli : ${m} [/INST]` }),
+                    headers: { 
+                        "Authorization": `Bearer ${t}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        inputs: "Réécris ce message de façon professionnelle en français : " + m,
+                        parameters: { return_full_text: false }
+                    })
                 });
 
-                const d = await r.json();
-                if (r.ok) {
-                    let text = d[0].generated_text;
-                    document.getElementById('output').innerText = text.split('[/INST]').pop().trim();
-                    document.getElementById('output').style.display = 'block';
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Gemma renvoie parfois un tableau, parfois un objet
+                    const result = Array.isArray(data) ? data[0].generated_text : data.generated_text;
+                    out.innerText = result.trim();
+                    out.style.display = "block";
                 } else {
-                    document.getElementById('err').innerText = "Erreur : " + d.error;
-                    document.getElementById('err').style.display = 'block';
+                    alert("Erreur IA : " + (data.error || "Problème de clé"));
                 }
-            } catch (e) {
-                document.getElementById('err').innerText = "Connexion bloquée par le navigateur. Testez sur votre téléphone en 4G.";
-                document.getElementById('err').style.display = 'block';
+            } catch (err) {
+                alert("Blocage de sécurité persistant. Vérifie que ton token est bien un token 'READ'.");
             } finally {
-                document.getElementById('lod').style.display = 'none';
+                lod.style.display = "none";
             }
         }
     </script>
