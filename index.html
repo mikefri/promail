@@ -1,72 +1,37 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Expert | Version Stable</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; text-align: center; }
-        .card { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        textarea, input { width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        #result { margin-top: 20px; padding: 15px; background: #eef2ff; border-radius: 6px; display: none; text-align: left; }
-        .error { color: red; font-size: 0.8rem; margin-top: 10px; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2>ProMail Expert</h2>
-    <input type="password" id="token" placeholder="Colle ton hf_..." onchange="localStorage.setItem('tok', this.value)">
-    <textarea id="msg" rows="5" placeholder="Ton message à corriger..."></textarea>
-    <button onclick="tester()">Améliorer mon message</button>
-    <div id="loader" style="display:none">⏳ Analyse en cours...</div>
-    <div id="result"></div>
-    <div id="debug" class="error"></div>
-</div>
-
 <script>
-// Chargement auto du token
-document.getElementById('token').value = localStorage.getItem('tok') || '';
-
 async function tester() {
     const t = document.getElementById('token').value.trim();
     const m = document.getElementById('msg').value;
     const resDiv = document.getElementById('result');
     const debug = document.getElementById('debug');
-    const loader = document.getElementById('loader');
 
     if(!t || !m) return alert("Complète les champs !");
 
-    loader.style.display = "block";
+    document.getElementById('loader').style.display = "block";
     resDiv.style.display = "none";
-    debug.innerText = "";
 
     try {
-        // Changement pour un modèle très léger et stable (Mistral-7B v0.3)
-        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3", {
-            headers: { "Authorization": `Bearer ${t}`, "Content-Type": "application/json" },
+        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1", {
+            headers: { 
+                "Authorization": "Bearer " + t,
+                "Content-Type": "application/json"
+            },
             method: "POST",
-            body: JSON.stringify({ inputs: "Corrige ce mail en français pro : " + m }),
+            body: JSON.stringify({ inputs: "Reformule en français pro : " + m }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-            let texte = data[0].generated_text;
-            // On enlève la question d'origine si l'IA la répète
-            resDiv.innerText = texte.replace("Corrige ce mail en français pro : " + m, "").trim();
+            resDiv.innerText = data[0].generated_text.split("pro :")[1] || data[0].generated_text;
             resDiv.style.display = "block";
         } else {
-            // Affiche l'erreur précise de Hugging Face
-            debug.innerText = "Détail : " + (data.error || "Erreur inconnue");
+            debug.innerText = "Erreur : " + data.error;
         }
     } catch (err) {
-        debug.innerText = "Erreur réseau ou bloqueur de pub.";
+        debug.innerText = "Blocage navigateur (CORS). Désactive tes bloqueurs de pub ou Brave Shield.";
     } finally {
-        loader.style.display = "none";
+        document.getElementById('loader').style.display = "none";
     }
 }
 </script>
-</body>
-</html>
