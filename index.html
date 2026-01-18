@@ -13,61 +13,78 @@
         button { width: 100%; padding: 15px; background: #4338ca; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
         #res { margin-top: 20px; padding: 15px; background: #f1f5f9; border-left: 5px solid #4338ca; border-radius: 8px; display: none; white-space: pre-wrap; font-size: 15px; }
         .status { display: none; color: #64748b; font-size: 14px; margin-top: 10px; text-align: center; }
+        .note { font-size: 13px; color: #666; text-align: center; margin-top: 15px; }
     </style>
 </head>
 <body>
-
 <div class="card">
     <h2>ProMail Express</h2>
     <input type="password" id="tk" placeholder="Colle ta clé hf_..." onchange="localStorage.setItem('saved_tk', this.value)">
-    <textarea id="msg" rows="4" placeholder="Ton message à corriger..."></textarea>
+    <textarea id="msg" rows="4" placeholder="Ton message à rendre plus pro..."></textarea>
     <button onclick="send()">TRANSFORMER</button>
-    <div id="lod" class="status">⏳ L'IA prépare ta réponse...</div>
+    <div id="lod" class="status">⏳ L'IA prépare une version professionnelle...</div>
     <div id="res"></div>
+    <div class="note">Utilise un modèle plus moderne (Mistral, Llama, etc.) car BlenderBot n'est plus disponible en inference gratuite.</div>
 </div>
 
 <script>
-    // Récupère automatiquement ta clé sauvegardée
+    // Récupère la clé sauvegardée
     document.getElementById('tk').value = localStorage.getItem('saved_tk') || '';
 
     async function send() {
-        const t = document.getElementById('tk').value.trim();
-        const m = document.getElementById('msg').value.trim();
-        const out = document.getElementById('res');
-        const lod = document.getElementById('lod');
+        const token = document.getElementById('tk').value.trim();
+        const message = document.getElementById('msg').value.trim();
+        const output = document.getElementById('res');
+        const loader = document.getElementById('lod');
 
-        if(!t || !m) return alert("Veuillez remplir les deux cases !");
-        
-        lod.style.display = "block";
-        out.style.display = "none";
+        if (!token || !message) {
+            alert("Veuillez remplir la clé API et le message !");
+            return;
+        }
+
+        loader.style.display = "block";
+        output.style.display = "none";
 
         try {
-            // Utilisation du nouveau routeur Hugging Face via un proxy CORS pour éviter les blocages
-            const url = "https://router.huggingface.co/hf-inference/models/facebook/blenderbot-400M-distill";
-            
-            const response = await fetch(url, {
+            const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
                 method: "POST",
-                headers: { 
-                    "Authorization": `Bearer ${t}`,
+                headers: {
+                    "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ inputs: "Reformule ce message de façon professionnelle : " + m })
+                body: JSON.stringify({
+                    model: "mistralai/Mistral-7B-Instruct-v0.3", // ← très bon rapport qualité/vitesse
+                    // Autres bons choix possibles :
+                    // "meta-llama/Llama-3.2-3B-Instruct"
+                    // "Qwen/Qwen2.5-7B-Instruct"
+                    // "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+                    messages: [
+                        {
+                            role: "user",
+                            content: `Reformule ce message de façon très professionnelle, polie et concise (style email professionnel français) :\n\n${message}`
+                        }
+                    ],
+                    max_tokens: 350,
+                    temperature: 0.65
+                })
             });
 
-            const data = await response.json();
-            
-            if (response.ok) {
-                // On affiche la réponse propre
-                const text = Array.isArray(data) ? data[0].generated_text : (data.generated_text || data.conversation.generated_responses[0]);
-                out.innerText = text.trim();
-                out.style.display = "block";
-            } else {
-                alert("Erreur IA : " + (data.error || "Problème de connexion"));
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error?.message || "Erreur HTTP " + response.status);
             }
+
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content?.trim() || "Pas de réponse valide...";
+
+            output.innerText = text;
+            output.style.display = "block";
+
         } catch (err) {
-            alert("Blocage réseau persistant. Essayez de désactiver le Wi-Fi sur votre mobile.");
+            alert("Erreur : " + err.message + "\n\nVérifie que ta clé a les droits Inference (serverless) et que le modèle existe.");
+            console.error(err);
         } finally {
-            lod.style.display = "none";
+            loader.style.display = "none";
         }
     }
 </script>
