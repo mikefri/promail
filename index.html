@@ -1,0 +1,33 @@
+async function processEmail() {
+    const text = document.getElementById('inputField').value;
+    const token = prompt("Veuillez coller votre token Hugging Face (hf_...) :"); 
+    const resultDiv = document.getElementById('result');
+    
+    if(!text || !token) return alert("Texte et Token requis");
+    
+    resultDiv.style.display = 'block';
+    resultDiv.innerText = "L'IA réfléchit...";
+
+    try {
+        const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", {
+            headers: { 
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            method: "POST",
+            body: JSON.stringify({
+                inputs: `[INST] Tu es un expert en communication. Corrige les fautes et reformule ce mail pour qu'il soit professionnel, poli et en français : ${text} [/INST]`,
+                parameters: { max_new_tokens: 500 }
+            }),
+        });
+        
+        const data = await response.json();
+        // Nettoyage de la réponse pour ne garder que le texte corrigé
+        const fullText = data[0].generated_text;
+        const cleanedText = fullText.split('[/INST]').pop().trim();
+        
+        resultDiv.innerText = cleanedText;
+    } catch (error) {
+        resultDiv.innerText = "Erreur : Vérifiez votre token ou la connexion.";
+    }
+}
