@@ -1,329 +1,332 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProMail Express • AI Pro Transformer 2026</title>
+    <title>Correcteur Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); } 50% { box-shadow: 0 0 30px 15px rgba(99, 102, 241, 0); } }
-        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-        .glow-hover:hover { box-shadow: 0 0 35px 15px rgba(99, 102, 241, 0.4); transform: translateY(-3px); }
-        .glass { backdrop-filter: blur(20px); background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(99, 102, 241, 0.25); }
-        body { 
-            background: linear-gradient(135deg, #0f172a, #1e1b4b, #312e81, #4f46e5); 
-            background-attachment: fixed; 
-            overflow-x: hidden;
+        body {
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        .particles { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; 
-            background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%);
-            animation: pulseGlow 12s infinite alternate;
+        .btn-primary {
+            background: #4f46e5;
+            transition: all 0.2s;
         }
-        /* Toast */
-        #toastContainer {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        .btn-primary:disabled {
+            background: #94a3b8;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .btn-secondary.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .result-box {
+            background: white;
+            border: 2px solid #e2e8f0;
+            min-height: 200px;
         }
         .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
             padding: 16px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 280px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            transform: translateX(120%);
-            opacity: 0;
-            transition: all 0.4s ease;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-left: 4px solid #10b981;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
         }
-        .toast.show {
-            transform: translateX(0);
-            opacity: 1;
+        .toast.error {
+            border-left-color: #ef4444;
         }
-        .toast.success { background: linear-gradient(to right, #10b981, #059669); }
-        .toast.error   { background: linear-gradient(to right, #ef4444, #b91c1c); }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
-<body class="min-h-screen text-gray-100 flex items-center justify-center p-6 relative font-sans">
-    <div class="particles"></div>
+<body class="p-6">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Correcteur Pro</h1>
+            <p class="text-gray-500">Corrigez vos messages instantanément avec l'IA</p>
+        </div>
 
-    <div class="w-full max-w-7xl relative z-10">
-        <div class="glass rounded-3xl p-8 md:p-12 shadow-2xl shadow-indigo-900/50 transition-all duration-500 hover:shadow-indigo-700/60">
-            
-            <div class="text-center mb-10">
-                <h1 class="text-5xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center justify-center gap-4">
-                    <i class="fas fa-wand-magic-sparkles text-5xl animate-pulse"></i>
-                    ProMail Express
-                </h1>
-                <p class="mt-3 text-indigo-300 opacity-90">AI Multi-Models • Historique • Résultat dédié</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+        <!-- Configuration rapide -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
-                <!-- Historique -->
-                <div class="glass rounded-2xl p-8 flex flex-col order-3 lg:order-1">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-bold text-indigo-300">Historique</h3>
-                        <button onclick="clearHistory()" class="text-sm text-red-400 hover:text-red-300 transition flex items-center gap-2">
-                            <i class="fas fa-trash-alt"></i> Effacer
+                <!-- Mode correction -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                    <select id="mode" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        <option value="fix">Corriger les erreurs</option>
+                        <option value="improve">Améliorer le style</option>
+                        <option value="formal">Plus formel</option>
+                        <option value="simple">Plus simple</option>
+                    </select>
+                </div>
+
+                <!-- Tu/Vous -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ton</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setTone('tu')" id="btnTu" class="btn-secondary flex-1 px-4 py-2 rounded-lg text-sm font-medium">
+                            Tu
+                        </button>
+                        <button type="button" onclick="setTone('vous')" id="btnVous" class="btn-secondary active flex-1 px-4 py-2 rounded-lg text-sm font-medium">
+                            Vous
                         </button>
                     </div>
-                    <div id="historyList" class="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[50vh] lg:max-h-[70vh]"></div>
-                    <p class="mt-4 text-sm text-center text-indigo-400/70">Clique pour revoir</p>
                 </div>
 
-                <!-- Formulaire principal -->
-                <div class="glass rounded-2xl p-8 order-1 lg:order-2 relative">
-                    <button id="changeTokenBtn" class="absolute top-4 right-4 text-indigo-400 hover:text-indigo-300 text-sm flex items-center gap-2 hidden" onclick="showTokenField()">
-                        <i class="fas fa-key"></i> Changer token
-                    </button>
-
-                    <div class="mb-8">
-                        <label class="block text-sm font-medium text-indigo-300 mb-3">Modèle IA</label>
-                        <select id="modelSelect" class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass">
-                            <option value="Qwen/Qwen2.5-7B-Instruct">Qwen2.5-7B-Instruct (Équilibré, excellent FR)</option>
-                            <option value="HuggingFaceTB/SmolLM3-3B">SmolLM3-3B (Ultra-rapide)</option>
-                            <option value="meta-llama/Llama-3.2-3B-Instruct">Llama-3.2-3B-Instruct (Fiable & léger)</option>
-                            <option value="meta-llama/Meta-Llama-3-8B-Instruct">Llama-3-8B-Instruct (Premium classique)</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-8 flex items-center justify-between">
-                        <label class="text-sm font-medium text-indigo-300">Forcer tutoiement ("tu")</label>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="forceTu" class="sr-only peer">
-                            <div class="w-14 h-7 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
-                        </label>
-                    </div>
-
-                    <div id="tokenSection" class="mb-8">
-                        <label class="block text-sm font-medium text-indigo-300 mb-3">Token Hugging Face</label>
-                        <div class="relative">
-                            <input type="password" id="tk" placeholder="hf_..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all glass">
-                            <i class="fas fa-key absolute right-5 top-1/2 -translate-y-1/2 text-indigo-400"></i>
-                        </div>
-                    </div>
-
-                    <div class="mb-10">
-                        <label class="block text-sm font-medium text-indigo-300 mb-3">Message à transformer</label>
-                        <textarea id="msg" rows="7" placeholder="Ex: Yo mec, envoie le rapport demain stp ça urge..." class="w-full px-6 py-5 bg-gray-900/40 border border-indigo-500/30 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none glass"></textarea>
-                    </div>
-
-                    <button onclick="send()" class="w-full py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold text-xl rounded-2xl shadow-2xl shadow-purple-900/50 hover:shadow-purple-700/70 transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-4 glow-hover">
-                        <i class="fas fa-magic text-2xl"></i> TRANSFORMER
-                    </button>
-
-                    <div id="lod" class="hidden mt-8 text-center text-indigo-400 font-medium flex items-center justify-center gap-3 animate-pulse">
-                        <i class="fas fa-brain text-2xl animate-spin"></i> Transformation...
-                    </div>
-                </div>
-
-                <!-- Résultat -->
-                <div class="glass rounded-2xl p-8 flex flex-col order-2 lg:order-3">
-                    <h3 class="text-2xl font-bold text-indigo-300 mb-6 text-center">Résultat</h3>
-                    <div id="res" class="flex-1 p-6 glass rounded-xl border-indigo-500/40 relative min-h-[300px] flex items-center justify-center">
-                        <div id="resultPlaceholder" class="text-center text-indigo-400/70">
-                            Le résultat apparaîtra ici après transformation
-                        </div>
-                        <div id="resultContent" class="hidden w-full h-full relative">
-                            <button id="copyBtn" class="absolute top-4 right-4 text-indigo-300 hover:text-white transition-colors text-xl" title="Copier">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                            <div id="resultText" class="text-lg leading-relaxed text-gray-200 whitespace-pre-wrap"></div>
-                        </div>
+                <!-- Contexte -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pour</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setContext('email')" id="btnEmail" class="btn-secondary active flex-1 px-4 py-2 rounded-lg text-sm font-medium">
+                            Email
+                        </button>
+                        <button type="button" onclick="setContext('teams')" id="btnTeams" class="btn-secondary flex-1 px-4 py-2 rounded-lg text-sm font-medium">
+                            Teams
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <p class="mt-12 text-center text-sm text-indigo-300/70">
-                Powered by Hugging Face Inference • Modèles open-source • Respect du tutoiement
-            </p>
+        <!-- Zone de texte -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
+            <!-- Input -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Votre texte</label>
+                <textarea 
+                    id="input" 
+                    rows="12" 
+                    placeholder="Collez votre message ici..."
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none"
+                ></textarea>
+            </div>
+
+            <!-- Output -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Texte corrigé</label>
+                    <button 
+                        id="copyBtn" 
+                        onclick="copyResult()" 
+                        class="text-sm text-gray-500 hover:text-gray-700 hidden"
+                    >
+                        📋 Copier
+                    </button>
+                </div>
+                <div id="output" class="result-box w-full px-4 py-3 rounded-lg text-gray-700 whitespace-pre-wrap overflow-y-auto" style="max-height: 400px;">
+                    <div class="text-gray-400 text-center pt-20">
+                        Le résultat apparaîtra ici
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-center gap-4">
+            <button 
+                id="correctBtn"
+                onclick="correct()" 
+                class="btn-primary px-8 py-3 text-white rounded-lg font-medium shadow-sm"
+            >
+                <span id="btnText">Corriger</span>
+                <span id="btnLoading" class="hidden">
+                    <svg class="inline w-5 h-5 spinner" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Correction...
+                </span>
+            </button>
+            <button 
+                onclick="clearAll()" 
+                class="btn-secondary px-8 py-3 rounded-lg font-medium"
+            >
+                Effacer
+            </button>
+        </div>
+
+        <!-- Info -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>✨ Propulsé par Claude AI • Pas de token requis • Correction instantanée</p>
+            <p class="mt-1 text-xs">Raccourci : <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl + Enter</kbd> pour corriger</p>
         </div>
     </div>
 
-    <!-- Toasts container -->
-    <div id="toastContainer"></div>
-
     <script>
-        // Toast function
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
+        let tone = 'vous';
+        let context = 'email';
+        let isProcessing = false;
+
+        function setTone(t) {
+            tone = t;
+            document.getElementById('btnTu').classList.toggle('active', t === 'tu');
+            document.getElementById('btnVous').classList.toggle('active', t === 'vous');
+        }
+
+        function setContext(c) {
+            context = c;
+            document.getElementById('btnEmail').classList.toggle('active', c === 'email');
+            document.getElementById('btnTeams').classList.toggle('active', c === 'teams');
+        }
+
+        function showToast(msg, isError = false) {
             const toast = document.createElement('div');
-            toast.className = `toast ${type} show flex items-center`;
-            toast.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl"></i>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
-        // Token logic
-        const tokenSection = document.getElementById('tokenSection');
-        const changeTokenBtn = document.getElementById('changeTokenBtn');
-        const tkInput = document.getElementById('tk');
-
-        const savedToken = localStorage.getItem('saved_tk') || '';
-        tkInput.value = savedToken;
-
-        if (savedToken) {
-            tokenSection.classList.add('hidden');
-            changeTokenBtn.classList.remove('hidden');
-        }
-
-        function showTokenField() {
-            tokenSection.classList.remove('hidden');
-            changeTokenBtn.classList.add('hidden');
-            tkInput.focus();
-        }
-
-        // Historique
-        let history = JSON.parse(localStorage.getItem('promail_history')) || [];
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-            if (history.length === 0) {
-                list.innerHTML = '<p class="text-center text-indigo-400/70 py-10">Aucune transformation pour l\'instant...</p>';
-                return;
-            }
-            history.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'p-5 glass rounded-xl cursor-pointer hover:bg-indigo-900/30 transition group';
-                div.innerHTML = `
-                    <div class="flex justify-between text-sm text-indigo-400 mb-2">
-                        <span>${item.model.split('/').pop()}</span>
-                        <span>${new Date(item.date).toLocaleString('fr-FR', {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div class="text-gray-300 mb-2 line-clamp-3">${item.original.substring(0,100)}${item.original.length > 100 ? '...' : ''}</div>
-                    <div class="text-white font-medium line-clamp-3">${item.result.substring(0,120)}${item.result.length > 120 ? '...' : ''}</div>
-                `;
-                div.onclick = () => {
-                    document.getElementById('resultText').innerText = item.result;
-                    document.getElementById('resultPlaceholder').classList.add('hidden');
-                    document.getElementById('resultContent').classList.remove('hidden');
-                    document.getElementById('res').scrollIntoView({ behavior: 'smooth' });
-                };
-                list.appendChild(div);
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✓ Copié !');
             });
         }
-        renderHistory();
 
-        function addToHistory(original, result, model) {
-            history.unshift({ original, result, model, date: Date.now() });
-            if (history.length > 30) history.pop();
-            localStorage.setItem('promail_history', JSON.stringify(history));
-            renderHistory();
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').innerHTML = '<div class="text-gray-400 text-center pt-20">Le résultat apparaîtra ici</div>';
+            document.getElementById('copyBtn').classList.add('hidden');
         }
 
-        function clearHistory() {
-            if (confirm("Effacer tout l'historique ?")) {
-                history = [];
-                localStorage.removeItem('promail_history');
-                renderHistory();
-                showToast("Historique effacé", "success");
-            }
+        function getPrompt() {
+            const mode = document.getElementById('mode').value;
+            const toneText = tone === 'tu' ? 'Utilise le tutoiement (tu, te, ton).' : 'Utilise le vouvoiement (vous, votre).';
+            const contextText = context === 'email' ? 'un email professionnel' : 'un message Teams';
+
+            const prompts = {
+                fix: `Tu es un correcteur expert. Corrige uniquement les fautes d'orthographe, de grammaire, de conjugaison et de ponctuation. Ne change pas le style ni le ton. ${toneText}
+
+Réponds UNIQUEMENT avec le texte corrigé, sans explication.`,
+                
+                improve: `Tu es un assistant de rédaction professionnelle. Améliore ce texte pour ${contextText} : corrige toutes les erreurs, rends-le plus professionnel, fluide et agréable à lire. ${toneText}
+
+Réponds UNIQUEMENT avec le texte amélioré, sans explication.`,
+                
+                formal: `Tu es un expert en communication formelle. Transforme ce texte pour le rendre plus formel et professionnel, adapté à ${contextText}. Corrige toutes les erreurs. ${toneText}
+
+Réponds UNIQUEMENT avec le texte formel, sans explication.`,
+                
+                simple: `Tu es un expert en clarté. Simplifie ce texte : utilise des phrases courtes et un vocabulaire simple tout en restant professionnel pour ${contextText}. Corrige toutes les erreurs. ${toneText}
+
+Réponds UNIQUEMENT avec le texte simplifié, sans explication.`
+            };
+
+            return prompts[mode];
         }
 
-        // Send function
-        async function send() {
-            let token = tkInput.value.trim();
-            if (!token && localStorage.getItem('saved_tk')) {
-                token = localStorage.getItem('saved_tk');
-            }
+        async function correct() {
+            if (isProcessing) return;
+            
+            const input = document.getElementById('input').value.trim();
 
-            const msg = document.getElementById('msg').value.trim();
-            const model = document.getElementById('modelSelect').value;
-            const forceTu = document.getElementById('forceTu').checked;
-            const loader = document.getElementById('lod');
-            const resultPlaceholder = document.getElementById('resultPlaceholder');
-            const resultContent = document.getElementById('resultContent');
-            const resultText = document.getElementById('resultText');
-
-            if (!token || !msg) {
-                showToast("Token et message obligatoires !", "error");
+            if (!input) {
+                showToast('Entrez un texte à corriger', true);
                 return;
             }
 
-            loader.classList.remove('hidden');
-            resultContent.classList.add('hidden');
-            resultPlaceholder.classList.remove('hidden');
+            isProcessing = true;
+            const correctBtn = document.getElementById('correctBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+            const outputDiv = document.getElementById('output');
 
-            const systemPrompt = forceTu ?
-                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
-Toujours utiliser le tutoiement ("tu", "toi", "ton", "ta", etc.), même si le message original est formel ou utilise "vous". Sois naturel, élégant et sympa.` :
-                `Tu es un assistant qui reformule des messages en français professionnel, poli et concis (style email pro).
-Respecte scrupuleusement le niveau de familiarité de l'original :
-- Si l'original utilise "tu" ou un ton amical/informel → garde absolument le tutoiement.
-- Si l'original utilise "vous" ou un ton formel → utilise le vouvoiement.
-- Si neutre ou ambigu → préfère le tutoiement léger et sympa.`;
+            // UI Loading state
+            correctBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+            outputDiv.innerHTML = '<div class="text-gray-400 text-center pt-20"><svg class="inline w-8 h-8 spinner text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="mt-2">Correction en cours...</p></div>';
 
             try {
-                const resp = await fetch("https://router.huggingface.co/v1/chat/completions", {
-                    method: "POST",
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
                     headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json"
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: model,
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
                         messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: `Reformule ce message de façon très professionnelle, polie et concise (style email professionnel français parfait) :\n\n${msg}` }
-                        ],
-                        max_tokens: 400,
-                        temperature: 0.65
+                            {
+                                role: 'user',
+                                content: `${getPrompt()}
+
+Texte à corriger :
+${input}`
+                            }
+                        ]
                     })
                 });
 
-                if (!resp.ok) {
-                    const errData = await resp.json().catch(() => ({}));
-                    throw new Error(errData.error?.message || "Erreur lors de l'appel à l'API");
+                if (!response.ok) {
+                    throw new Error('Erreur de connexion à l\'API');
                 }
 
-                const data = await resp.json();
-                const text = data.choices?.[0]?.message?.content?.trim() || "Réponse vide...";
+                const data = await response.json();
+                const result = data.content?.[0]?.text?.trim() || 'Erreur lors de la correction';
 
-                resultText.innerText = text;
-                resultPlaceholder.classList.add('hidden');
-                resultContent.classList.remove('hidden');
+                outputDiv.textContent = result;
+                document.getElementById('copyBtn').classList.remove('hidden');
+                showToast('✓ Correction terminée !');
 
-                if (!localStorage.getItem('saved_tk') && token) {
-                    localStorage.setItem('saved_tk', token);
-                    tokenSection.classList.add('hidden');
-                    changeTokenBtn.classList.remove('hidden');
-                    showToast("Token enregistré avec succès ✓", "success");
-                }
-
-                addToHistory(msg, text, model);
-
-            } catch (e) {
-                showToast("Erreur : " + e.message, "error");
-                console.error(e);
+            } catch (error) {
+                console.error('Erreur:', error);
+                outputDiv.innerHTML = '<div class="text-red-500 text-center pt-20">❌ Une erreur est survenue. Veuillez réessayer.</div>';
+                showToast('Erreur : ' + error.message, true);
             } finally {
-                loader.classList.add('hidden');
+                isProcessing = false;
+                correctBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
             }
         }
 
-        document.getElementById('copyBtn').onclick = () => {
-            const txt = document.getElementById('resultText').innerText;
-            navigator.clipboard.writeText(txt)
-                .then(() => showToast("Texte copié dans le presse-papiers !", "success"))
-                .catch(() => showToast("Impossible de copier le texte", "error"));
-        };
+        // Ctrl+Enter to submit
+        document.getElementById('input').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                correct();
+            }
+        });
     </script>
 </body>
 </html>
